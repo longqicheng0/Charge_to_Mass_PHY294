@@ -37,3 +37,16 @@ Interpretation
 Be = 29.2594 ± 23 µT, which is comparable in magnitude to a typical Earth magnetic field.
 The uncertainty is large relative to the estimate.
 For reference, many locations on Earth have magnetic fields on the order of 25 to 65 µT; your estimate is 29.3 ± 23 µT.
+
+Question 5: e/m from Equation 10
+Fitted equation: sqrt(V)/r = s I + c
+Slope s = 221.295 ± 3.7
+Intercept c = 8.94826 ± 6.5
+R^2 = 0.998330
+Chi-square = 11.3282
+Reduced chi-square = 1.88804
+Helmholtz constant k = 5.51038496e-04
+Computed e/m = 1.6128e+11 ± 5.4e+09 C/kg
+Accepted e/m = 1.758820e+11 C/kg
+Percent difference = 8.30199 %
+The Question 5 e/m result is not reasonably consistent with the accepted value within uncertainty.

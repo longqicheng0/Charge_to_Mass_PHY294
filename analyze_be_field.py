@@ -39,6 +39,9 @@ VOLTAGE_UNCERTAINTY_V = 0.1
 ELEMENTARY_CHARGE_C = 1.602176634e-19
 ELECTRON_MASS_KG = 9.1093837015e-31
 REPORT_OUTPUT_PATH = "analysis_results.txt"
+QUESTION3_PLOT_PATH = "be_field_fit.png"
+QUESTION5_PLOT_PATH = "em_fit.png"
+E_OVER_M_ACCEPTED = 1.758820e11
 
 
 def format_value_uncertainty(value, uncertainty, value_precision=6, uncertainty_precision=2, scale=1.0):
@@ -134,6 +137,22 @@ def chi_square_with_effective_uncertainty(y_values, fitted_y, y_uncertainty, slo
     degrees_of_freedom = len(residuals) - num_fit_parameters
     reduced_chi_square = chi_square / degrees_of_freedom
     return chi_square, reduced_chi_square, effective_uncertainty
+
+
+def helmholtz_k_constant(mu0, n_turns, coil_radius_m):
+    return (1.0 / np.sqrt(2.0)) * ((4.0 / 5.0) ** 1.5) * mu0 * n_turns / coil_radius_m
+
+
+def equation10_y_with_uncertainty(voltage_v, voltage_uncertainty_v, radius_m, radius_uncertainty_m):
+    sqrt_voltage = np.sqrt(voltage_v)
+    y_values = sqrt_voltage / radius_m
+    partial_y_partial_v = 1.0 / (2.0 * radius_m * sqrt_voltage)
+    partial_y_partial_r = -sqrt_voltage / (radius_m ** 2)
+    y_uncertainty = np.sqrt(
+        (partial_y_partial_v * voltage_uncertainty_v) ** 2
+        + (partial_y_partial_r * radius_uncertainty_m) ** 2
+    )
+    return y_values, y_uncertainty
 
 
 def print_data_table(currents_a, current_uncertainty_a, radii_m, radius_uncertainty_m,
@@ -322,12 +341,89 @@ def plot_results(
     axis_residuals.legend()
 
     figure.tight_layout()
+    figure.savefig(QUESTION3_PLOT_PATH, dpi=300)
+    print(f"\nPlot saved to {QUESTION3_PLOT_PATH}")
     backend_name = plt.get_backend().lower()
-    if "agg" in backend_name:
-        output_path = "be_field_fit.png"
-        figure.savefig(output_path, dpi=300)
-        print(f"\nPlot saved to {output_path}")
-    else:
+    if "agg" not in backend_name:
+        plt.show()
+
+
+def plot_question5_results(
+    currents_a,
+    current_uncertainty_a,
+    y_values,
+    y_uncertainty,
+    fit_slope,
+    fit_intercept,
+    residuals,
+    reduced_chi_square,
+):
+    x_line = np.linspace(np.min(currents_a) * 0.95, np.max(currents_a) * 1.05, 300)
+    y_line = fit_slope * x_line + fit_intercept
+
+    figure, (axis_main, axis_residuals) = plt.subplots(
+        2,
+        1,
+        figsize=(9, 8),
+        sharex=True,
+        gridspec_kw={"height_ratios": [3, 1]},
+    )
+
+    axis_main.errorbar(
+        currents_a,
+        y_values,
+        xerr=current_uncertainty_a,
+        yerr=y_uncertainty,
+        fmt="o",
+        color="tab:blue",
+        ecolor="tab:gray",
+        elinewidth=1,
+        capsize=3,
+        label="Measured data",
+    )
+    axis_main.plot(x_line, y_line, color="tab:red", linewidth=2, label="Best-fit line")
+    axis_main.set_xlabel("I (A)")
+    axis_main.set_ylabel("sqrt(V)/r")
+    axis_main.set_title("Question 5: Linearized e/m Fit")
+    annotation_text = (
+        f"Best fit: sqrt(V)/r = ({fit_slope:.4e})I + ({fit_intercept:.4e})\n"
+        f"reduced chi^2 = {reduced_chi_square:.3f}"
+    )
+    axis_main.text(
+        0.03,
+        0.97,
+        annotation_text,
+        transform=axis_main.transAxes,
+        va="top",
+        ha="left",
+        bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.85, "edgecolor": "0.7"},
+    )
+    axis_main.legend()
+    axis_main.grid(True, alpha=0.3)
+
+    axis_residuals.errorbar(
+        currents_a,
+        residuals,
+        xerr=current_uncertainty_a,
+        yerr=y_uncertainty,
+        fmt="o",
+        color="tab:green",
+        ecolor="tab:gray",
+        elinewidth=1,
+        capsize=3,
+        label="Residuals",
+    )
+    axis_residuals.axhline(0.0, color="black", linestyle="--", linewidth=1)
+    axis_residuals.set_xlabel("I (A)")
+    axis_residuals.set_ylabel("Residual")
+    axis_residuals.grid(True, alpha=0.3)
+    axis_residuals.legend()
+
+    figure.tight_layout()
+    figure.savefig(QUESTION5_PLOT_PATH, dpi=300)
+    print(f"Plot saved to {QUESTION5_PLOT_PATH}")
+    backend_name = plt.get_backend().lower()
+    if "agg" not in backend_name:
         plt.show()
 
 
@@ -374,6 +470,34 @@ def main():
         alpha_theory,
         alpha_theory_uncertainty,
     )
+
+    # Question 5: Equation 10 linearization y = sqrt(V)/r vs x = I.
+    k_constant = helmholtz_k_constant(MU0, N_TURNS, COIL_RADIUS_M)
+    equation10_x = CURRENT_A
+    equation10_x_uncertainty = CURRENT_UNCERTAINTY_A
+    equation10_y, equation10_y_uncertainty = equation10_y_with_uncertainty(
+        ACCELERATING_VOLTAGE_V,
+        VOLTAGE_UNCERTAINTY_V,
+        radii_m,
+        radius_uncertainty_m,
+    )
+    question5_fit = manual_linear_fit(equation10_x, equation10_y)
+    slope_q5 = question5_fit["slope"]
+    intercept_q5 = question5_fit["intercept"]
+    slope_q5_uncertainty = question5_fit["slope_uncertainty"]
+    intercept_q5_uncertainty = question5_fit["intercept_uncertainty"]
+    residuals_q5 = question5_fit["residuals"]
+    r_squared_q5 = question5_fit["r_squared"]
+    chi_square_q5, reduced_chi_square_q5, _ = chi_square_with_effective_uncertainty(
+        equation10_y,
+        question5_fit["fitted_y"],
+        equation10_y_uncertainty,
+        slope_q5,
+        equation10_x_uncertainty,
+    )
+    e_over_m = (slope_q5 / k_constant) ** 2
+    e_over_m_uncertainty = abs(2.0 * slope_q5 / (k_constant ** 2)) * slope_q5_uncertainty
+    percent_difference_em = 100.0 * abs(e_over_m - E_OVER_M_ACCEPTED) / E_OVER_M_ACCEPTED
 
     header_lines = [
         "Charge-to-Mass Lab Analysis: External Magnetic Field from Linearized Helmholtz Relation",
@@ -428,6 +552,30 @@ def main():
         print(line)
         append_report_line(report_lines, line)
 
+    consistency_ratio = abs(e_over_m - E_OVER_M_ACCEPTED) / e_over_m_uncertainty if e_over_m_uncertainty > 0 else np.inf
+    if consistency_ratio <= 2.0:
+        consistency_statement = "The Question 5 e/m result is reasonably consistent with the accepted value within uncertainty."
+    else:
+        consistency_statement = "The Question 5 e/m result is not reasonably consistent with the accepted value within uncertainty."
+
+    question5_lines = [
+        "\nQuestion 5: e/m from Equation 10",
+        "Fitted equation: sqrt(V)/r = s I + c",
+        f"Slope s = {format_value_uncertainty(slope_q5, slope_q5_uncertainty, value_precision=6, uncertainty_precision=2)}",
+        f"Intercept c = {format_value_uncertainty(intercept_q5, intercept_q5_uncertainty, value_precision=6, uncertainty_precision=2)}",
+        f"R^2 = {r_squared_q5:.6f}",
+        f"Chi-square = {chi_square_q5:.6g}",
+        f"Reduced chi-square = {reduced_chi_square_q5:.6g}",
+        f"Helmholtz constant k = {k_constant:.8e}",
+        f"Computed e/m = {format_value_uncertainty(e_over_m, e_over_m_uncertainty, value_precision=6, uncertainty_precision=2)} C/kg",
+        f"Accepted e/m = {E_OVER_M_ACCEPTED:.6e} C/kg",
+        f"Percent difference = {percent_difference_em:.6g} %",
+        consistency_statement,
+    ]
+    for line in question5_lines:
+        print(line)
+        append_report_line(report_lines, line)
+
     write_report(report_lines, REPORT_OUTPUT_PATH)
     print(f"\nTerminal output also written to {REPORT_OUTPUT_PATH}")
     plot_results(
@@ -441,6 +589,20 @@ def main():
         chi_square,
         reduced_chi_square,
     )
+    plot_question5_results(
+        equation10_x,
+        equation10_x_uncertainty,
+        equation10_y,
+        equation10_y_uncertainty,
+        slope_q5,
+        intercept_q5,
+        residuals_q5,
+        reduced_chi_square_q5,
+    )
+    print("\nGenerated files:")
+    print(f"- {REPORT_OUTPUT_PATH}")
+    print(f"- {QUESTION3_PLOT_PATH}")
+    print(f"- {QUESTION5_PLOT_PATH}")
 
 
 if __name__ == "__main__":
