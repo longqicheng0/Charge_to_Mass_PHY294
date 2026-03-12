@@ -1,0 +1,39 @@
+Charge-to-Mass Lab Analysis: External Magnetic Field from Linearized Helmholtz Relation
+========================================================================================
+Voltage V = 225.4 ± 0.1 V
+Current uncertainty dI = 1.0e-04 A
+Radius uncertainty dr = 0.50 mm = 5.0e-04 m
+
+Data Table
+--------------------------------------------------------------------------------------------------------
+Point                 I (A)                 r (m)                 1/r (1/m)                Bc (T)
+--------------------------------------------------------------------------------------------------------
+    1       1.1176 ± 0.0001         0.06 ± 0.0005           16.66667 ± 0.14  0.0008709302 ± 7.8e-08
+    2       1.1953 ± 0.0001        0.055 ± 0.0005           18.18182 ± 0.17  0.0009314807 ± 7.8e-08
+    3       1.3234 ± 0.0001         0.05 ± 0.0005                  20 ± 0.2  0.001031307 ± 7.8e-08
+    4        1.465 ± 0.0001        0.045 ± 0.0005           22.22222 ± 0.25  0.001141654 ± 7.8e-08
+    5       1.6398 ± 0.0001         0.04 ± 0.0005                 25 ± 0.31  0.001277873 ± 7.8e-08
+    6       1.8637 ± 0.0001        0.035 ± 0.0005           28.57143 ± 0.41  0.001452356 ± 7.8e-08
+    7        2.205 ± 0.0001         0.03 ± 0.0005           33.33333 ± 0.56  0.001718326 ± 7.8e-08
+    8        2.705 ± 0.0001        0.025 ± 0.0005                  40 ± 0.8  0.002107969 ± 7.8e-08
+--------------------------------------------------------------------------------------------------------
+
+Fit Results
+Slope m = 5.27807e-05 ± 8.8e-07 T·m
+Intercept b = -2.92594e-05 ± 2.3e-05 T
+External field Be = -b = 2.92594e-05 ± 2.3e-05 T
+External field Be = 29.2594 ± 23 µT
+R^2 = 0.998330
+Chi-square = 10.6933
+Reduced chi-square = 1.78221
+Effective residual uncertainty uses sigma_eff = sqrt((dBc)^2 + (m d(1/r))^2) to include both x and y uncertainties.
+
+Theory Comparison
+alpha_theory = 5.06269e-05 ± 1.1e-08 T·m
+Signed percent difference (fit vs theory) = 4.25431 ± 1.7 %
+Absolute percent difference = 4.25431 %
+
+Interpretation
+Be = 29.2594 ± 23 µT, which is comparable in magnitude to a typical Earth magnetic field.
+The uncertainty is large relative to the estimate.
+For reference, many locations on Earth have magnetic fields on the order of 25 to 65 µT; your estimate is 29.3 ± 23 µT.
